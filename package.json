@@ -1,0 +1,19 @@
+{
+  "name": "rss-file-manager",
+  "version": "1.0.0",
+  "description": "File Manager Assignment",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "rs",
+    "school",
+    "exercise",
+    "task",
+    "assignment"
+  ],
+  "author": "Eduardo Barbosa",
+  "license": "ISC"
+}
