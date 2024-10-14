@@ -21,17 +21,17 @@ export class CryptoOperations {
 				const fstream = createReadStream(pathToFile);
 
 				const handleReadError = () => {
-					console.error('! ERROR reading file');
+					process.stdout.write(`\n! Operation Failed\n\n`);
 					hash.destroy();	
 					fstream.destroy();
-					reject(error);
+					resolve();
 				}
 
 				const handleHashError = () => {
-					console.error('! ERROR hashing file');
+					process.stdout.write(`\n! Operation Failed\n\n`);
 					hash.destroy();	
 					fstream.destroy();
-					reject(error);
+					resolve();
 				}
 
 				fstream
@@ -44,13 +44,13 @@ export class CryptoOperations {
 					const fileHash = await hash.read();
 					if (fileHash) {
 						process.stdout.write(`Hash for ${file}: ${fileHash}\n`);
-						resolve(fileHash);
+						resolve();
 					}
 				});
 
 			} catch (error) {
-				console.log('UNCAUGHT ERROR: ', error);
-				reject(error);
+				process.stdout.write(`\n! Operation Failed\n\n`);
+				resolve();
 			}
 		});
 	}

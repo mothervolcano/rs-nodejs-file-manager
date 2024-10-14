@@ -10,6 +10,11 @@ export class ReadFileCommand extends Command {
 	}
 
 	async execute(p) {
+		if (!p) {
+			process.stdout.write(`\n! Invalid input: please specify a file to read\n\n`);
+			return
+		}
+
 		await this._service.readFile(p[0]);
 	}
 }

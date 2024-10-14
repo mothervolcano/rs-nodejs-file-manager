@@ -1,6 +1,4 @@
-// import path from 'node:path';
 import os from 'node:os';
-// import fs from 'fs/promises';
 
 import { CommandManager } from './CommandManager.js';
 import { NwdOperations } from './services/NwdOperations.js';
@@ -18,28 +16,10 @@ import { RemoveFileCommand } from './commands/RemoveFileCommand.js';
 import { OsCommand } from './commands/OsCommand.js';
 import { GetFileHashCommand } from './commands/GetFileHashCommand.js';
 import { GoToParentDirectoryCommand } from './commands/GoToParentDirectoryCommand.js';
+import { CompressOperations } from './services/CompressOperations.js';
+import { CompressFileCommand } from './commands/CompressFileCommand.js';
+import { DecompressFileCommand } from './commands/DecompressFileCommand.js';
 
-const __DIRNAME = import.meta.dirname;
-const args = process.argv.slice(2);
-
-const actions = []
-
-const greet = function (username) {
-	// console.log(`Hello ${username}`);
-	process.stdout.setEncoding('utf-8');
-	process.stdout.write('***************************************\n');
-	process.stdout.write('\n')
-	process.stdout.write(` Welcome to the File Manager, ${username}!\n`);
-	process.stdout.write('\n\n\n')
-	process.stdout.write('***************************************\n');
-	process.stdout.write('\n')
-	process.stdout.write('Current directory: \n')
-	process.stdout.write(`${pathStore.currentDirectory}\n`)
-	process.stdout.write('\n\n')
-	process.stdout.write('Enter a command:\n')
-	process.stdout.write('> ')
-
-}
 
 /** 
  * The store objects organizes the state of the app into logical groups
@@ -58,9 +38,24 @@ const osStore = {
 	homeDirectory: null,
 }
 
-const cryptoStore = {
 
+const greet = function (username) {
+	process.stdout.setEncoding('utf-8');
+	process.stdout.write('***************************************\n');
+	process.stdout.write('\n')
+	process.stdout.write(` Welcome to the File Manager, ${username}!\n`);
+	process.stdout.write('\n\n\n')
+	process.stdout.write('***************************************\n');
+	process.stdout.write('\n')
+	process.stdout.write('Current directory: \n')
+	process.stdout.write(`${pathStore.currentDirectory}\n`)
+	process.stdout.write('\n\n')
+	process.stdout.write('Enter a command:\n')
+	process.stdout.write('> ')
+
+	settingsStore.username = username;
 }
+
 
 /** 
  * The services modules group operations that have something in common
@@ -70,6 +65,7 @@ const nwdOperations = new NwdOperations(pathStore);
 const fileOperations = new FileOperations(pathStore);
 const osOperations = new OsOperations(osStore);
 const cryptoOperations = new CryptoOperations(pathStore);
+const compressOperations = new CompressOperations(pathStore);
 
 /** 
  * This maps the string inputs to their commands allowing for flexibility in changing the
@@ -88,6 +84,8 @@ const commandList = new Map([
    ['rm', new RemoveFileCommand(fileOperations)],
    ['os', new OsCommand(osOperations)],
    ['hash', new GetFileHashCommand(cryptoOperations)],
+   ['compress', new CompressFileCommand(compressOperations)],
+   ['decompress', new DecompressFileCommand(compressOperations)],
 ]);
 
 
@@ -98,6 +96,13 @@ const commandList = new Map([
  * to enable, for example, undo functionality.
  * */
 const commandManager = new CommandManager(commandList);
+
+
+// ----------------------------------------------------------
+// HANDLE INIT PARAMETERS
+
+const args = process.argv.slice(2);
+const initActions = []
 
 const parseArg = function (arg) {
 	if (arg.startsWith("--") && arg.includes('=')) {
@@ -113,12 +118,12 @@ const parseArg = function (arg) {
 
 const parseArgs = function(args) {
 	args.forEach( arg => {
-		actions.push(parseArg(arg));
+		initActions.push(parseArg(arg));
 	});
 }
 
 const runActions = function() {
-	actions.forEach( action => {
+	initActions.forEach( action => {
 		if (commandList.has(action.name)) {
 			commandList.get(action.name)(action.value);
 		}
@@ -129,20 +134,35 @@ const runActions = function() {
 parseArgs(args);
 runActions();
 
+
+// ----------------------------------------------------------
+// HANDLE USER INPUT
+
 process.stdin.setEncoding('utf-8');
 process.stdin.on('data', async (input) => {
 	if (input === '\n') {
-		process.stdout.write('please type a valid command\n')
-		process.stdout.write('> ')
+		// do nothing
+		process.stdout.write('> ');
 	} else {
 		const _input = input.trim().split(' ');
 		const command = _input[0];
 		const params = _input[1] ? _input.slice(1) : null;
 
-		console.log("params: ", params);
-
 		await commandManager.executeCommand(command, params);
-		console.log(`You're currently in ${pathStore.currentDirectory}`);
+
+		process.stdout.write(`\nYou\'re currently in ${pathStore.currentDirectory}\n`);
+		process.stdout.write('\nType a valid command\n');
+		process.stdout.write('> ');
 	}
 });
+
+process.on('SIGINT', async () => {
+  process.exit(0);
+});
+
+process.on('exit', () => {
+  process.stdout.write(`\nThank you for using File Manager, ${settingsStore.username}, goodbye!\n`);
+});
+
+
 

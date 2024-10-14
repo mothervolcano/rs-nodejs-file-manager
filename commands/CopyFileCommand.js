@@ -12,7 +12,7 @@
 
  	async execute(p) {
  		if (!p) {
- 			console.error('COMMAND ERROR: at least one parameter required');
+ 			process.stdout.write(`\n! Invalid input: specify file to copy at least\n\n`);
  			return;
  		}
 

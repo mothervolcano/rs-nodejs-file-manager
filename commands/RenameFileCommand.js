@@ -10,10 +10,8 @@
  	}
 
  	async execute(p) {
- 		console.log("args: ", p)
-
  		if (!p || p.length < 2) {
- 			console.error('!ERROR: two parameters required');
+ 			process.stdout.write(`\n! Invalid input: please specify file to rename and new name\n\n`);
  		}
 
  		const currFilename = p[0];

@@ -12,7 +12,7 @@
  	async execute(p) {
 
  		if (!p || p.length < 2) {
- 			console.error("! COMMAND ERROR: two parameters are required");
+ 			process.stdout.write(`\n! Invalid input: please specify directory name or path\n\n`);
  		}
 
  		await this._service.moveFile(p[0], p[1])

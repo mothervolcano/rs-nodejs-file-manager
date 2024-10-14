@@ -24,19 +24,29 @@ export class FileOperations {
 		const isPath = false; // TODO
 		const pathToFile = isPath ? input : path.join(this._store.currentDirectory, input);  
 
-		try {
-			const fstream = fs.createReadStream(pathToFile, { encoding: 'utf-8'});
+		return new Promise((resolve, reject) => {
+			try {
+				const fstream = fs.createReadStream(pathToFile, { encoding: 'utf-8'});
 
-			fstream.on('data', (chunk) => {
-				process.stdout.write(`${chunk}\n`);
-			});
+				fstream.on('data', (chunk) => {
+					process.stdout.write(`${chunk}\n`);
+					resolve();
+				});
 
-			fstream.on('error', (error) => {
-				console.error("!ERROR: failed to read file", error);
-			});
-		} catch (error) {
-			console.log("!UNEXPECTED ERRRO");
-		}
+				fstream.on('error', (error) => {
+					process.stdout.write(`\n! Operation Failed: error occurred while reading the file.\n`);
+					resolve();
+				});
+
+			} catch (error) {
+				if (error.code === 'ENOENT') {
+					process.stdout.write(`\n! Operation Failed: file not found.\n`);
+				} else {
+					process.stdout.write(`\n! Operation Failed.\n`);
+				}
+				resolve();
+			}
+		});
 	}
 
 	async createFile(file) {
@@ -45,7 +55,7 @@ export class FileOperations {
 		const fileExists = await checkFileExistence(pathToFile);
 
 		if (fileExists) {
-			console.error('ERROR: File already exists!');
+			process.stdout.write(`\n! Operation Failed. File already exists.\n`);
 			return;
 		}
  
@@ -53,7 +63,7 @@ export class FileOperations {
 			await writeFile(pathToFile, '');
 			process.stdout.write(`${file} successfully created.\n`);
 		} catch (error) {
-			console.log('!ERROR: failed to create new file.', error);
+			process.stdout.write(`\n! Operation Failed.\n`);
 		}	
 	}
 
@@ -65,12 +75,12 @@ export class FileOperations {
 		const fileWithNewNameExists = await checkFileExistence(pathToNewFile);
 
 		if (!fileWithNameExists) {
-			console.error('ERROR: No such file.');
+			process.stdout.write(`\n! Operation Failed. File not found.\n`);
 			return;
 		}
 
 		if (fileWithNewNameExists) {
-			console.error('ERROR: File with this name alreayd exists.');
+			process.stdout.write(`\n! Operation Failed. File with this name already exists.\n`);
 			return;
 		}
 
@@ -78,7 +88,7 @@ export class FileOperations {
 			await rename(pathToFile, pathToNewFile);
 			process.stdout.write(`${file} successfully renamed.\n`);
 		} catch (error) {
-			console.error('! ERROR renaming file: ', error);
+			process.stdout.write(`\n! Operation Failed.\n`);
 		}
 	}
 
@@ -89,34 +99,40 @@ export class FileOperations {
 		const fileWithNameExists = await checkFileExistence(pathToFile);
 
 		if (!fileWithNameExists) {
-			console.error('ERROR: No such file.');
+			process.stdout.write(`\n! Operation Failed. File not found.\n`);
 			return;
 		}
 
 		const handleReadError = async (error) => {
-			console.error('! READ ERROR: ', error);
 			frstream.destroy();
 			fwstream.destroy();
+			process.stdout.write(`\n! Operation Failed. Error reading file\n`);
 		}
 
 		const handleWriteError = async (error) => {
-			console.error('! WRITE ERROR: ', error);
 			frstream.destroy();
 			fwstream.destroy();
+			process.stdout.write(`\n! Operation Failed. Error writing file.\n`);
 		}
 
-		try {
-			const frstream = fs.createReadStream(pathToFile);
-			const fwstream = fs.createWriteStream(pathToFileCopy);
+		return new Promise((resolve, reject) => {
+			try {
+				const frstream = fs.createReadStream(pathToFile);
+				const fwstream = fs.createWriteStream(pathToFileCopy);
 
-			frstream
-				.on('error', handleReadError)
-				.pipe(fwstream)
-				.on('error', handleWriteError)
+				frstream
+					.on('error', handleReadError)
+					.pipe(fwstream)
+					.on('error', handleWriteError)
 
-		} catch (error) {
-			console.error('!UNCAUGHT ERROR: ', error);
-		}
+				resolve();
+
+			} catch (error) {
+				process.stdout.write(`\n! Operation Failed. File not found.\n`);
+				resolve();
+			}
+		});
+
 	}
 
 	async moveFile(file, dir) {
@@ -124,7 +140,7 @@ export class FileOperations {
 			await this.copyFile(file, dir);
 			await this.removeFile(file);
 		} catch (error) {
-			console.error('! UNCAUGHT ERROR: ', error);
+			process.stdout.write(`\n! Operation Failed.\n`);
 		}
 	}
 
@@ -135,9 +151,9 @@ export class FileOperations {
 			await rm(pathToFile);
 		} catch (error) {
 			if (error.code === 'ENOENT') {
-				console.error('! ERROR: no such file exists');
+				process.stdout.write(`\n! Operation Failed: file not found\n`);
 			} else {
-				console.error('! UNCAUGHT ERROR');
+				process.stdout.write(`\n! Operation Failed.\n`);
 			}
 		}
 	}

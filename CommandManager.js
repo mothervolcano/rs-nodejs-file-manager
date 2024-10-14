@@ -13,6 +13,9 @@ export class CommandManager {
 			const paramsToSend = params ? params : null;
 
 			await this._directory.get(command).execute(paramsToSend);
+		} else {
+			process.stdout.write(`\n ! Invalid input: command not recognized.\n`);
+			return;
 		}
 	}
 }

@@ -12,7 +12,7 @@
  	async execute(p) {
 
  		if (!p) {
- 			console.error('! COMMAND ERROR: missing file name');
+ 			process.stdout.write(`\n! Invalid input: please specify file to delete\n\n`);
  		}
 
  		await this._service.removeFile(p[0]);
