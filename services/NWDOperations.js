@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'fs/promises';
 
-export class NWDOperations {
+export class NwdOperations {
 	_store;
 
 	constructor(store) {
@@ -10,22 +10,19 @@ export class NWDOperations {
 
 	async listDirectory(dir) {
 		try {
-			const files = await fs.readdir(this._store.currentDirectory);
+			const files = await fs.readdir(this._store.currentDirectory, { encoding: 'utf-8'});
 			files.forEach( (file, i) => {
-				process.stdout.write(`[${i}] ${file}\n`)
-				// console.log(`[${i}] ${file}`);
+				process.stdout.write(`${i.toString()} - ${file}\n`);
 			});
 		} catch (error) {
 		}
 	}
 
 	async changeDirectory(dir) {
-		if (!dir) {
-			// handle input error 
-		}
+
+		const pathToDir = path.join(this._store.currentDirectory, dir);
 
 		try {
-			const pathToDir = path.join(this._store.currentDirectory, dir);
 			await fs.opendir(pathToDir);
 			this._store.currentDirectory = pathToDir;
 		} catch (error) {
@@ -33,5 +30,16 @@ export class NWDOperations {
 				// handle error
 			}
 		}
+	}
+
+	async goToParentDirectory() {
+
+		if (this._store.currentDirectory === this._store.homeDirectory ) {
+			console.log(`You're at the root directory.`);
+			return;
+		}
+		
+		const pathToDir = path.dirname(this._store.currentDirectory);
+		this._store.currentDirectory = pathToDir;
 	}
 }

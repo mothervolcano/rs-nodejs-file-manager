@@ -3,9 +3,21 @@ import os from 'node:os';
 // import fs from 'fs/promises';
 
 import { CommandManager } from './CommandManager.js';
-import { NWDOperations } from './services/nwdOperations.js';
+import { NwdOperations } from './services/NwdOperations.js';
+import { OsOperations } from './services/OsOperations.js';
+import { CryptoOperations } from './services/CryptoOperations.js';
+import { FileOperations } from './services/FileOperations.js';
 import { ListDirectoryCommand } from './commands/ListDirectoryCommand.js';
 import { ChangeDirectoryCommand } from './commands/ChangeDirectoryCommand.js';
+import { ReadFileCommand } from './commands/ReadFileCommand.js';
+import { CreateFileCommand } from './commands/CreateFileCommand.js';
+import { RenameFileCommand } from './commands/RenameFileCommand.js';
+import { CopyFileCommand } from './commands/CopyFileCommand.js';
+import { MoveFileCommand } from './commands/MoveFileCommand.js';
+import { RemoveFileCommand } from './commands/RemoveFileCommand.js';
+import { OsCommand } from './commands/OsCommand.js';
+import { GetFileHashCommand } from './commands/GetFileHashCommand.js';
+import { GoToParentDirectoryCommand } from './commands/GoToParentDirectoryCommand.js';
 
 const __DIRNAME = import.meta.dirname;
 const args = process.argv.slice(2);
@@ -32,17 +44,32 @@ const greet = function (username) {
 /** 
  * The store objects organizes the state of the app into logical groups
  * */
+const settingsStore = {
+	username: null,
+}
+
 const pathStore = {
+	homeDirectory: os.homedir(),
 	lastDirectory: null,
-	currentDirectory: os.homedir()
+	currentDirectory: os.homedir(),
+}
+
+const osStore = {
+	homeDirectory: null,
+}
+
+const cryptoStore = {
+
 }
 
 /** 
  * The services modules group operations that have something in common
  * and share the same store object
  * **/
-const nwdOperations = new NWDOperations(pathStore);
-
+const nwdOperations = new NwdOperations(pathStore);
+const fileOperations = new FileOperations(pathStore);
+const osOperations = new OsOperations(osStore);
+const cryptoOperations = new CryptoOperations(pathStore);
 
 /** 
  * This maps the string inputs to their commands allowing for flexibility in changing the
@@ -52,6 +79,15 @@ const commandList = new Map([
    ['username', greet],
    ['ls', new ListDirectoryCommand(nwdOperations)],
    ['cd', new ChangeDirectoryCommand(nwdOperations)],
+   ['up', new GoToParentDirectoryCommand(nwdOperations)],
+   ['cat', new ReadFileCommand(fileOperations)],
+   ['add', new CreateFileCommand(fileOperations)],
+   ['rn', new RenameFileCommand(fileOperations)],
+   ['cp', new CopyFileCommand(fileOperations)],
+   ['mv', new MoveFileCommand(fileOperations)],
+   ['rm', new RemoveFileCommand(fileOperations)],
+   ['os', new OsCommand(osOperations)],
+   ['hash', new GetFileHashCommand(cryptoOperations)],
 ]);
 
 
@@ -94,15 +130,19 @@ parseArgs(args);
 runActions();
 
 process.stdin.setEncoding('utf-8');
-process.stdin.on('data', (input) => {
+process.stdin.on('data', async (input) => {
 	if (input === '\n') {
 		process.stdout.write('please type a valid command\n')
 		process.stdout.write('> ')
 	} else {
 		const _input = input.trim().split(' ');
 		const command = _input[0];
-		const params = _input[1] || null;
-		commandManager.executeCommand(command, params);
+		const params = _input[1] ? _input.slice(1) : null;
+
+		console.log("params: ", params);
+
+		await commandManager.executeCommand(command, params);
+		console.log(`You're currently in ${pathStore.currentDirectory}`);
 	}
 });
 

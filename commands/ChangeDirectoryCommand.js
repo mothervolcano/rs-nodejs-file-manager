@@ -9,7 +9,7 @@ export class ChangeDirectoryCommand extends Command {
 		this._service = service;
 	}
 
-	execute(dir) {
-		this._service.changeDirectory(dir);
+	async execute(p) {
+		await this._service.changeDirectory(p[0]);
 	}
 }

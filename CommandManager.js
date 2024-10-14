@@ -7,9 +7,12 @@ export class CommandManager {
 		this._directory = directory;
 	}
 
-	executeCommand(command, params) {
+	async executeCommand(command, params) {
 		if (this._directory.has(command)) {
-			this._directory.get(command).execute(params);
+
+			const paramsToSend = params ? params : null;
+
+			await this._directory.get(command).execute(paramsToSend);
 		}
 	}
 }

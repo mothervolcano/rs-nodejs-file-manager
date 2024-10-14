@@ -1,7 +1,8 @@
 import { Command } from "../Command.js";
 
 
-export class ListDirectoryCommand extends Command {
+
+export class GoToParentDirectoryCommand extends Command {
 	_service;
 
 	constructor(service) {
@@ -9,7 +10,7 @@ export class ListDirectoryCommand extends Command {
 		this._service = service;
 	}
 
-	async execute(p) {
-		await this._service.listDirectory(p);
+	execute() {
+		this._service.goToParentDirectory();
 	}
 }
